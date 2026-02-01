@@ -5,7 +5,7 @@ from torch import Tensor
 
 
 class FeedForwardNet(nn.Module):
-    def __init__(self, d_model: int, d_ff: int, dropout: float = 0.1):
+    def __init__(self, d_model: int, d_ff: int, dropout: float):
         super().__init__()
         self.d_model = d_model
         self.d_ff = d_ff

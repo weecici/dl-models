@@ -8,9 +8,7 @@ from ._ffn import FeedForwardNet
 
 
 class EncoderLayer(nn.Module):
-    def __init__(
-        self, d_model: int, d_ff: int, num_heads: int = 1, dropout: float = 0.1
-    ):
+    def __init__(self, d_model: int, d_ff: int, num_heads: int, dropout: float):
         super().__init__()
         self.d_model = d_model
 
@@ -38,9 +36,7 @@ class EncoderLayer(nn.Module):
 
 
 class DecoderLayer(nn.Module):
-    def __init__(
-        self, d_model: int, d_ff: int, num_heads: int = 1, dropout: float = 0.1
-    ):
+    def __init__(self, d_model: int, d_ff: int, num_heads: int, dropout: float):
         super().__init__()
         self.d_model = d_model
 

@@ -3,9 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
+from ._const import *
+
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model: int, max_len: int = 5000, dropout: float = 0.1):
+    def __init__(self, d_model: int, max_len: int, dropout: float):
         super().__init__()
         assert (
             d_model % 2 == 0

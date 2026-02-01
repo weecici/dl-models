@@ -7,23 +7,25 @@ from torch import Tensor, LongTensor
 
 from .layer import EncoderLayer, DecoderLayer
 from ._pe import PositionalEncoding
+from ._const import *
 
 
 class Encoder(nn.Module):
     def __init__(
         self,
-        num_layers: int,
         vocab_size: int,
         d_model: int,
         d_ff: int,
-        num_heads: int = 1,
-        dropout: float = 0.1,
+        num_heads: int,
+        dropout: float,
+        max_len: int,
+        num_layers: int,
     ):
         super().__init__()
         self.scalar = math.sqrt(d_model)
 
         self.embedding = nn.Embedding(vocab_size, d_model)
-        self.pos_encoding = PositionalEncoding(d_model, dropout=dropout)
+        self.pos_encoding = PositionalEncoding(d_model, max_len, dropout=dropout)
         self.layer_stack = nn.ModuleList(
             [EncoderLayer(d_model, d_ff, num_heads, dropout) for _ in range(num_layers)]
         )
@@ -44,18 +46,19 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(
         self,
-        num_layers: int,
         vocab_size: int,
         d_model: int,
         d_ff: int,
-        num_heads: int = 1,
-        dropout: float = 0.1,
+        num_heads: int,
+        dropout: float,
+        max_len: int,
+        num_layers: int,
     ):
         super().__init__()
         self.scalar = math.sqrt(d_model)
 
         self.embedding = nn.Embedding(vocab_size, d_model)
-        self.pos_encoding = PositionalEncoding(d_model, dropout=dropout)
+        self.pos_encoding = PositionalEncoding(d_model, max_len, dropout=dropout)
         self.layer_stack = nn.ModuleList(
             [DecoderLayer(d_model, d_ff, num_heads, dropout) for _ in range(num_layers)]
         )
@@ -82,21 +85,22 @@ class Decoder(nn.Module):
 class Transformer(nn.Module):
     def __init__(
         self,
-        num_encoder_layers: int,
-        num_decoder_layers: int,
         vocab_size: int,
-        d_model: int,
-        d_ff: int,
-        num_heads: int = 1,
-        dropout: float = 0.1,
+        d_model: int = DEFAULT_D_MODEL,
+        d_ff: int = DEFAULT_D_FF,
+        num_heads: int = DEFAULT_NUM_HEADS,
+        dropout: float = DEFAULT_DROPOUT,
+        max_len: int = DEFAULT_MAX_LEN,
+        num_encoder_layers: int = DEFAULT_NUM_LAYERS,
+        num_decoder_layers: int = DEFAULT_NUM_LAYERS,
     ):
         super().__init__()
 
         self.encoder = Encoder(
-            num_encoder_layers, vocab_size, d_model, d_ff, num_heads, dropout
+            vocab_size, d_model, d_ff, num_heads, dropout, max_len, num_encoder_layers
         )
         self.decoder = Decoder(
-            num_decoder_layers, vocab_size, d_model, d_ff, num_heads, dropout
+            vocab_size, d_model, d_ff, num_heads, dropout, max_len, num_decoder_layers
         )
         self.linear = nn.Linear(d_model, vocab_size, bias=False)
 
@@ -113,45 +117,7 @@ class Transformer(nn.Module):
     ) -> Tensor:
 
         enc_out = self.encoder(src, src_mask)
-        print("enc_out shape:", enc_out.shape)
         dec_out = self.decoder(tgt, enc_out, tgt_mask, src_mask)
         logits = self.linear(dec_out)
 
         return logits
-
-
-if __name__ == "__main__":
-    batch_size = 2
-    src_seq_length = 10
-    tgt_seq_length = 9
-    vocab_size = 100
-    d_model = 32
-    d_ff = 64
-    num_heads = 4
-    num_encoder_layers = 2
-    num_decoder_layers = 2
-
-    src = torch.randint(0, vocab_size, (batch_size, src_seq_length), dtype=torch.long)
-    tgt = torch.randint(0, vocab_size, (batch_size, tgt_seq_length), dtype=torch.long)
-
-    model = Transformer(
-        num_encoder_layers,
-        num_decoder_layers,
-        vocab_size,
-        d_model,
-        d_ff,
-        num_heads,
-    )
-
-    output = model(src, tgt)
-    print(
-        "Output shape:", output.shape
-    )  # Expected: [batch_size, tgt_seq_length, vocab_size]
-
-    # Print model summary
-    torchinfo.summary(
-        model,
-        input_data=(src, tgt),
-        col_names=["input_size", "output_size", "num_params", "trainable"],
-        depth=4,
-    )
