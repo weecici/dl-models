@@ -74,11 +74,11 @@ class MultiHeadAttention(nn.Module):
                 mask = mask.unsqueeze(1).unsqueeze(2)  # -> [B, 1, 1, L2]
             elif mask.dim() == 3:  # [B, L1, L2]
                 mask = mask.unsqueeze(1)  # -> [B, 1, L1, L2]
-            # mask True = keep, False = mask out
+            # True = mask, False = no mask
             if mask.dtype == torch.bool:
-                attn_scores = attn_scores.masked_fill(~mask, -1e9)
+                attn_scores = attn_scores.masked_fill(mask, -1e9)
             else:
-                attn_scores = attn_scores.masked_fill(mask == 0, -1e9)
+                attn_scores = attn_scores.masked_fill(mask == 1, -1e9)
 
         # calculate attention probabilities using softmax on the last dimension, shape: [B, H, L1, L2]
         attn_probs = F.softmax(attn_scores, dim=-1)
