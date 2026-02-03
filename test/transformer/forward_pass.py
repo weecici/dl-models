@@ -13,9 +13,16 @@ if __name__ == "__main__":
     num_heads = 4
     num_encoder_layers = 2
     num_decoder_layers = 2
+    pad_idx = 0
+    unk_idx = 1
+    bos_idx = 2
+    eos_idx = 3
 
     src = torch.randint(0, vocab_size, (batch_size, src_seq_length), dtype=torch.long)
     tgt = torch.randint(0, vocab_size, (batch_size, tgt_seq_length), dtype=torch.long)
+
+    tgt[:, 0] = bos_idx
+    tgt[:, -1] = eos_idx
 
     model = Transformer(
         vocab_size=vocab_size,
